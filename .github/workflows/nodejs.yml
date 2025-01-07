@@ -26,7 +26,7 @@ jobs:
           yarn lint
           yarn test
           yarn build:chrome
-          PREACT_VERSION=10 yarn test:e2e --retries 5
+          yarn test:e2e:10 --retries 5
         env:
           CI: true
       - name: Upload test results
