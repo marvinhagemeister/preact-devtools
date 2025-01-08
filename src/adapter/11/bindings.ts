@@ -169,7 +169,10 @@ export function getDisplayName(internal: Internal, config: RendererConfig) {
 export function getActualChildren(
 	internal: Internal,
 ): Array<Internal | null | undefined> {
-	return (internal as Internal)._children || (internal as any).__k || [];
+	const children =
+		(internal as Internal)._children || (internal as any).__k || [];
+
+	return [...children, ...((internal as any).__linked_children || [])];
 }
 
 export function getComponent(node: HookState | Internal): Component | null {
@@ -192,11 +195,27 @@ export function getDom(internal: Internal): HTMLElement | Text | null {
 	return (internal as Internal)._dom || (internal as any).__e || null;
 }
 
+function getVirtualParent(vnode: Internal): Internal | null {
+	const vnodeChildren = getActualChildren(vnode);
+	if (vnodeChildren.length > 0 && isInternal(vnodeChildren[0])) {
+		const child = vnodeChildren[0];
+		if ((child as any).__linked_parent) {
+			return (child as any).__linked_parent;
+		}
+	}
+	return null;
+}
+
 /**
  * Get the direct parent of a `vnode`
  */
 export function getVNodeParent(internal: Internal): Internal | null {
-	return (internal as Internal)._parent || (internal as any).__ || null;
+	return (
+		getVirtualParent(internal) ||
+		(internal as Internal)._parent ||
+		(internal as any).__ ||
+		null
+	);
 }
 
 /**

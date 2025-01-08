@@ -8,6 +8,17 @@ import { ComponentHooks, HookState, PreactBindings } from "../shared/bindings";
 import { RendererConfig } from "../shared/renderer";
 import { getRenderReasonPost } from "./renderReason";
 
+function getVirtualParent(vnode: VNode): VNode | null {
+	const vnodeChildren = getActualChildren(vnode);
+	if (vnodeChildren.length > 0 && isVNode(vnodeChildren[0])) {
+		const child = vnodeChildren[0];
+		if ((child as any).__linked_parent) {
+			return (child as any).__linked_parent;
+		}
+	}
+	return null;
+}
+
 // Mangle accessors
 
 /**
@@ -15,6 +26,7 @@ import { getRenderReasonPost } from "./renderReason";
  */
 export function getVNodeParent(vnode: VNode): VNode | null {
 	return (
+		getVirtualParent(vnode) ||
 		(vnode as IVNode)._parent ||
 		(vnode as any).__ ||
 		// Older Preact X versions used `__p`
@@ -172,7 +184,9 @@ export function getHookState(
 export function getActualChildren(
 	vnode: VNode,
 ): Array<VNode | null | undefined> {
-	return (vnode as IVNode)._children || (vnode as any).__k || [];
+	const children = (vnode as IVNode)._children || (vnode as any).__k || [];
+
+	return [...children, ...((vnode as any).__linked_children || [])];
 }
 
 // End Mangle accessors

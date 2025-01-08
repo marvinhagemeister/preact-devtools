@@ -183,6 +183,15 @@ export function shouldFilter<T extends SharedVNode>(
 	) {
 		return true;
 	}
+	// This is something like: when using linked parents / children, they come from
+	// separate commits, but they are linked, so will have children / parents set.
+	// Removing this results in duplicates on first start (interestingly, not
+	// duplicates when you toggle the "Fragments" element filter. I think this is
+	// because it then recreates the tree from children, and doesn't have the
+	// problem of creating this from separate commits)
+	if ((vnode as any).__linked_parent && !bindings.getComponent(vnode)) {
+		return true;
+	}
 
 	return false;
 }
